@@ -1,0 +1,46 @@
+declarative pipeline
+======================
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('Continuous Download')
+        {
+            steps
+            {
+                git 'https://github.com/intelliqittrainings/maven.git'
+            }
+        }
+         stage('Continuous Build')
+        {
+            steps
+            {
+                sh 'mvn package' 
+            }
+        }
+        stage('Continuous Deployment')
+        {
+            steps
+            {
+               deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.3.5:8080')], contextPath: 'test1', war: '**/*.war'
+            }
+        }
+        stage('Continuous Testing')
+        {
+            steps
+            {
+               git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
+               sh 'java -jar /home/ubuntu/.jenkins/workspace/Declarativepipeline/testing.jar'
+            }
+        }
+         stage('Continuous Delivary')
+        {
+            steps
+            {
+                input message: 'need the aproval delivary manager', submitter: 'vishnu'
+                deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.13.197:8080')], contextPath: 'prod1', war: '**/*.war' 
+            }
+        }
+    }
+}
