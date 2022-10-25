@@ -1,0 +1,109 @@
+/home/ubuntu/.jenkins/workspace/developement
+ /home/ubuntu/.jenkins/workspace/testing
+
+
+screpted pipeline
+=================
+pipeline
+node('built-in') 
+{
+    stage('continuousDownload')
+    {
+        git 'https://github.com/intelliqittrainings/maven.git'
+    }   
+    stage('continuousBuild')
+    {
+       sh 'mvn package'
+    }  
+     stage('continuousDeployment')
+    {
+       deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.3.5:8080')], contextPath: 'testapp', war: '**/*.war'
+    }
+    stage('continuousTesting')
+    {
+       git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
+       sh 'java -jar testing.jar'
+    }  
+    stage('continuousDelivary')
+    {
+       deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.13.197:8080')], contextPath: 'prodapp', war: '**/*.war'
+    }  
+}
+
+
+
+
+
+
+
+
+declarative pipeline
+======================
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('Continuous Download')
+        {
+            steps
+            {
+                git 'https://github.com/intelliqittrainings/maven.git'
+            }
+        }
+         stage('Continuous Build')
+        {
+            steps
+            {
+                sh 'mvn package' 
+            }
+        }
+        stage('Continuous Deployment')
+        {
+            steps
+            {
+               deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.3.5:8080')], contextPath: 'test1', war: '**/*.war'
+            }
+        }
+        stage('Continuous Testing')
+        {
+            steps
+            {
+               git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
+               sh 'java -jar /home/ubuntu/.jenkins/workspace/Declarativepipeline/testing.jar'
+            }
+        }
+         stage('Continuous Delivary')
+        {
+            steps
+            {
+                input message: 'need the aproval delivary manager', submitter: 'vishnu'
+                deploy adapters: [tomcat9(credentialsId: '336543ad-3f7c-43f7-b12f-324d1d3d2769', path: '', url: 'http://172.31.13.197:8080')], contextPath: 'prod1', war: '**/*.war' 
+            }
+        }
+    }
+}
+
+
+
+for try catch purpose sample
+=====================
+  stage('Continuous Build')
+        {
+            steps
+            {
+              scrept
+              {
+                  try
+                  {
+                     sh 'mvn package'   
+                  }
+                  catch(exception e2)
+                  {
+                     mail bcc: '', body: 'jenkins was failed', cc: '', from: '', replyTo: '', subject: 'Download failed', to: 'vishnuguru43@gmail.com'  
+                    exit(2)
+                  }   
+                } 
+                
+            }
+        }
